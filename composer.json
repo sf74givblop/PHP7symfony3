@@ -1,0 +1,14 @@
+{
+    "name": "vendor/php7symfony3",
+    "description": "Description of project Php7symfony3.",
+    "authors": [
+        {
+            "name": "DADDY",
+            "email": "your@email.here"
+        }
+    ],
+    "require": {
+        "symfony/symfony": "dev-master",
+        "symfony/polyfill-intl-icu": "dev-master"
+    }
+}
