@@ -205,6 +205,25 @@ class Res{
 }
 
 
+class TableRows extends RecursiveIteratorIterator { 
+    function __construct($it) { 
+        parent::__construct($it, self::LEAVES_ONLY); 
+    }
+
+    function current() {
+        return "<td>" . parent::current(). "</td>";
+    }
+
+    function beginChildren() { 
+        echo "<tr>"; 
+    } 
+
+    function endChildren() { 
+        echo "</tr>" . "\n";
+    } 
+} 
+
+
 class Database{
     //$this here refers to this scope ex $this->disconn
     var $curDbName;
@@ -301,11 +320,6 @@ class Database{
                echo '<div id="tableexits_MessageRed" style="color:red;font-weight:bold;">No row(s) selected. NO TABLE FOUND.</div><br />';
                return FALSE;  
             }
-            // set the resulting array to associative
-            //$result = $tablesInDb->setFetchMode(PDO::FETCH_ASSOC); 
-            //foreach(new TableRows(new RecursiveArrayIterator($stmt->fetchAll())) as $k=>$v) { 
-                // echo $v;
-            //}
  
         } catch (Exception $ex) {
             echo "aie aie";
@@ -327,21 +341,28 @@ echo "s1 - select Starts<br>";
 echo "s2 - ".$q."<br>";
         if(self::tableExists($table)){           /* Note self:: here */
 echo "continuing after verifying the table with query q: <br>".$q."<br>"; 
-            $ccc=$this->getConn();
-            $query = mysqli_query($ccc,$q);
-            if($query){
+
+
+
+            $ccc=$this->getConn();  /* using the handle */
+            $querySelect = $ccc->prepare($q); 
+            if($querySelect->execute()){
+                //$row_count = $querySelect->rowCount();
                 
                 //Calling external class
                 $curNumRes=new NumRes;
-                $curNumRes->_setNumResults(mysqli_num_rows($query));
+                $curNumRes->_setNumResults($querySelect->rowCount());
+                //echo "---->".$querySelect->rowCount();
                 $nR=$curNumRes->getNumResults();
-                echo "curNumRes->getNumResults(): ".$nR."<br>";
+        echo "Debug: The SELECT query returns :".$nR."rows<br />";
+        echo "Debug: curNumRes->getNumResults(): ".$nR."<br>";
                 $curRes=new Res;
                 
                 //the table
                 echo "<table id='taMain'>";
                 for($i = 0; $i < $nR; $i++){
-                    $r = mysqli_fetch_array($query);
+                    //$r = mysqli_fetch_array($query);
+                    $r=$querySelect->fetch(PDO::FETCH_BOTH);
                     $key = array_keys($r);
                     $numKey = count($key);
                     //we just want one header row
@@ -349,28 +370,28 @@ echo "continuing after verifying the table with query q: <br>".$q."<br>";
                         //the headers
                         echo "<thead><tr>";
                         for($h = 0; $h < $numKey; $h++){
-                            echo "<td>".$key[$h]."</td>";  
+                            echo "<td>".utf8_decode($key[$h])."</td>";  
                         }
                         echo "</tr></thead><tbody>";
                     }
+        //echo 'Debug: line 380, numKey='.$numKey;
                     for($x = 0; $x < $numKey; $x++){
                         // Sanitizes keys so only alphavalues are allowed
                         if(!is_int($key[$x])){
-                            //echo "Column header----------->".$key[$x]."<br>";
-                            if(mysqli_num_rows($query) > 1){
-                                $this->result[$i][$key[$x]] = $r[$key[$x]];
+                            if($numKey > 1){
+                                $this->result[$i][$key[$x]] = utf8_decode($r[$key[$x]]);
                                 $curRes->_setResult($this->result[$i][$key[$x]]);
-                            }else if(mysqli_num_rows($query) < 1){
+                            }else if($numKey < 1){
                                 $this->result = NULL;
                                 $curRes->_setResult($this->result);
                             }else{
-                                $this->result[$key[$x]] = $r[$key[$x]];
+                                $this->result[$key[$x]] = utf8_decode($r[$key[$x]]);
                                 $curRes->_setResult($this->result[$key[$x]]);
                             }
                             if($x==0){
                                 echo "<tr>";
                             }
-                                    echo "<td colspan='2'>".$curRes->getResult()."</td>";
+                            echo "<td colspan='2'>".$curRes->getResult()."</td>";
                             if($x==$numKey-1){    //7 because we have 8 cells in our rows
                                 echo "</tr>";
                             }
