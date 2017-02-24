@@ -158,11 +158,13 @@
                         <br> 
                         OR ?CRUDOP=SELECT&FI=SINGER,YEAR&WH=SINGER%20LIKE%20%27Gene%20Vincent%27&ORD=SINGER%20DESC
                         <br /><br />
-                        TO INSERT Add -> ?CRUDOP=INSERT&VALS=V1~V2~V3~V4 to the QueryString (Auto-increment column should show NULL
+                        TO INSERT Add -> ?CRUDOP=INSERT&VALS=MyTITLE~MySNGER~1999~NULL to the QueryString (Auto-increment column should show NULL
                         <br /><br />
                         Caution if no WHERE we delete the whole table
                         <br />
                         TO DELETE Add -> ?CRUDOP=DELETE&WHDEL=ID LIKE 9
+                        or if the value is a string do
+                        Add -> ?CRUDOP=DELETE&WHDEL=TITLe LIKE 'MYTITLE' or you will get an unknown column error
                         <br /><br />
                         In other circumstances, the code could use a form, you would submit it and grab the submitted values.
                         <br />
@@ -343,7 +345,7 @@ echo "s2 - ".$q."<br>";
 echo "continuing after verifying the table with query q: <br>".$q."<br>"; 
 
 
-
+//I do not use try/catch here to play with debug
             $ccc=$this->getConn();  /* using the handle */
             $querySelect = $ccc->prepare($q); 
             if($querySelect->execute()){
@@ -463,8 +465,9 @@ echo "continuing after verifying the table with query q: <br>".$q."<br>";
             $insert .= ' VALUES ('.$curValsString.')';
             echo 'i8 - '.$insert.'<br />';
             $cci=$this->getConn();
-            $ins = mysqli_query($cci,$insert);
-            if($ins){
+            $ins = $cci->prepare($insert);
+//I do not use try/catch here . To play with debug
+            if($ins->execute()){
                 echo '<div id="conn_MessageGreenInsert1" style="color:green;font-weight:bold;">Data correctly inserted</div>';
                 return true; 
             }else{
@@ -493,9 +496,9 @@ echo "continuing after verifying the table with query q: <br>".$q."<br>";
                 $delete = 'DELETE FROM '.$table.' WHERE '.$where; 
             }
             $ccd=$this->getConn();
-            $del = mysqli_query($ccd,$delete);
- 
-            if($del){
+            //$del = mysqli_query($ccd,$delete);
+            $del = $ccd->prepare($delete);
+            if($del->execute()){
                 echo '<div id="conn_MessageGreenDel" style="color:green;font-weight:bold;">1 row correctly deleted</div>';
                 return true; 
             }else{
